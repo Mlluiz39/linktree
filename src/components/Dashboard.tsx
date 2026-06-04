@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { loadLinks, saveLinks, sortLinks } from "../lib/linksStorage";
 import type { Link } from "../types/link";
 import { LinkEditorModal } from "./LinkEditorModal";
+import { LinksList } from "./LinksList";
 import { PreviewPanel } from "./PreviewPanel";
 import { StatsBar } from "./StatsBar";
 
@@ -77,7 +78,14 @@ export function Dashboard() {
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
           <div className="rounded-lg border border-ink/15 bg-linen p-4">
             <p className="mb-4 text-xs uppercase tracking-[0.18em] text-muted">Sua ordem publica</p>
-            <div id="links-list-mount" />
+            <LinksList
+              links={orderedLinks}
+              onReorder={setLinks}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onToggle={handleToggle}
+              onCreate={openCreateModal}
+            />
           </div>
           <PreviewPanel links={orderedLinks} />
         </div>
