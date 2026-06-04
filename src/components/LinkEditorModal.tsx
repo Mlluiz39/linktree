@@ -1,9 +1,8 @@
 import { X } from "lucide-react";
 import { useState } from "react";
 import { LINK_TYPE_OPTIONS } from "../lib/linkTypes";
-import type { Link, LinkType } from "../types/link";
-
-type LinkDraft = Pick<Link, "title" | "url" | "type" | "active">;
+import type { Link, LinkDraft, LinkType } from "../types/link";
+import { ToggleSwitch } from "./ToggleSwitch";
 
 type LinkEditorModalProps = {
   editingLink: Link | null;
@@ -20,19 +19,44 @@ export function LinkEditorModal({ editingLink, onClose, onSave }: LinkEditorModa
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!title.trim() || !url.trim()) {
+    const trimmedTitle = title.trim();
+    const trimmedUrl = url.trim();
+
+    if (!trimmedTitle || !trimmedUrl) {
       setError("Titulo e URL sao obrigatorios.");
       return;
     }
-    onSave({ title: title.trim(), url: url.trim(), type, active });
+
+    try {
+      new URL(trimmedUrl);
+    } catch {
+      setError("URL invalida. Use um formato como https://exemplo.com");
+      return;
+    }
+
+    onSave({ title: trimmedTitle, url: trimmedUrl, type, active });
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/35 px-4 py-6">
-      <form onSubmit={handleSubmit} className="w-full max-w-lg rounded-lg bg-linen p-5 shadow-2xl">
-        <div className="mb-5 flex items-center justify-between gap-4">
+    <div
+      className="animate-overlay-in fixed inset-0 z-50 flex items-center justify-center bg-ink/40 px-4 py-6 backdrop-blur-sm"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      role="dialog"
+      aria-modal="true"
+      aria-label={editingLink ? "Editar link" : "Novo link"}
+    >
+      <form
+        onSubmit={handleSubmit}
+        className="animate-scale-in w-full max-w-lg rounded-xl bg-linen p-6 shadow-[0_25px_80px_rgba(29,27,22,0.25)]"
+      >
+        <div className="mb-6 flex items-center justify-between gap-4">
           <h2 className="font-display text-3xl">{editingLink ? "Editar link" : "Novo link"}</h2>
-          <button type="button" onClick={onClose} className="rounded-full p-2 hover:bg-ink/10" aria-label="Fechar">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full p-2 text-muted transition-colors hover:bg-ink/10 hover:text-ink"
+            aria-label="Fechar"
+          >
             <X size={18} />
           </button>
         </div>
@@ -40,23 +64,25 @@ export function LinkEditorModal({ editingLink, onClose, onSave }: LinkEditorModa
         <label className="block text-sm font-semibold" htmlFor="link-title">Titulo</label>
         <input
           id="link-title"
-          className="mt-2 w-full rounded-md border border-ink/20 bg-white px-3 py-3 outline-none transition focus:border-ink"
+          className="mt-2 w-full rounded-lg border border-ink/15 bg-white px-4 py-3 outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/20"
+          placeholder="Ex: Meu canal no YouTube"
           value={title}
-          onChange={(event) => setTitle(event.target.value)}
+          onChange={(event) => { setTitle(event.target.value); setError(""); }}
         />
 
-        <label className="mt-4 block text-sm font-semibold" htmlFor="link-url">URL</label>
+        <label className="mt-5 block text-sm font-semibold" htmlFor="link-url">URL</label>
         <input
           id="link-url"
-          className="mt-2 w-full rounded-md border border-ink/20 bg-white px-3 py-3 outline-none transition focus:border-ink"
+          className="mt-2 w-full rounded-lg border border-ink/15 bg-white px-4 py-3 outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/20"
+          placeholder="https://..."
           value={url}
-          onChange={(event) => setUrl(event.target.value)}
+          onChange={(event) => { setUrl(event.target.value); setError(""); }}
         />
 
-        <label className="mt-4 block text-sm font-semibold" htmlFor="link-type">Tipo</label>
+        <label className="mt-5 block text-sm font-semibold" htmlFor="link-type">Tipo</label>
         <select
           id="link-type"
-          className="mt-2 w-full rounded-md border border-ink/20 bg-white px-3 py-3 outline-none transition focus:border-ink"
+          className="mt-2 w-full rounded-lg border border-ink/15 bg-white px-4 py-3 outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/20"
           value={type}
           onChange={(event) => setType(event.target.value as LinkType)}
         >
@@ -65,16 +91,33 @@ export function LinkEditorModal({ editingLink, onClose, onSave }: LinkEditorModa
           ))}
         </select>
 
-        <label className="mt-4 flex items-center gap-3 text-sm font-semibold">
-          <input type="checkbox" checked={active} onChange={(event) => setActive(event.target.checked)} />
-          Link ativo
-        </label>
+        <div className="mt-5">
+          <ToggleSwitch
+            checked={active}
+            onChange={setActive}
+            label="Link ativo"
+            id="link-active-toggle"
+          />
+        </div>
 
-        {error ? <p className="mt-4 text-sm font-semibold text-red-700">{error}</p> : null}
+        {error ? (
+          <p className="mt-4 rounded-lg bg-danger/10 px-3 py-2 text-sm font-medium text-danger">{error}</p>
+        ) : null}
 
-        <div className="mt-6 flex justify-end gap-3">
-          <button type="button" onClick={onClose} className="rounded-md border border-ink/25 px-4 py-2">Cancelar</button>
-          <button type="submit" className="rounded-md bg-ink px-4 py-2 font-semibold text-linen">Salvar</button>
+        <div className="mt-7 flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border border-ink/15 px-5 py-2.5 text-sm font-medium transition-colors hover:bg-parchment"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            className="rounded-lg bg-ink px-5 py-2.5 text-sm font-semibold text-linen transition-all hover:-translate-y-0.5 hover:shadow-lg"
+          >
+            Salvar
+          </button>
         </div>
       </form>
     </div>

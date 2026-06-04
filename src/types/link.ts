@@ -17,3 +17,5 @@ export type Link = {
   order: number;
   createdAt: string;
 };
+
+export type LinkDraft = Pick<Link, "title" | "url" | "type" | "active">;

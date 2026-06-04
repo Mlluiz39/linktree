@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LinkHub — Gerenciador de Links</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    :root {
+      --accent: #c05621;
+      --accent-soft: #fef3e8;
+      --fg: #1c1917;
+      --muted: #78716c;
+      --bg: #0c0a09;
+      --surface: #1c1917;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: #fff;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      padding: 48px 24px 32px;
+    }
+
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(192, 86, 33, 0.1);
+      border: 1px solid rgba(192, 86, 33, 0.2);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 20px;
+      letter-spacing: 0.02em;
+    }
+
+    .header h1 {
+      font-size: 40px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.7) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header h1 span {
+      background: linear-gradient(135deg, var(--accent), #d97706);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header p {
+      font-size: 16px;
+      color: var(--muted);
+      max-width: 520px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* Screens Container */
+    .screens {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      padding: 24px 40px 60px;
+      flex-wrap: wrap;
+    }
+
+    .screen-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .screen-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.5);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .screen-frame {
+      width: 412px;
+      height: 915px;
+      border-radius: 44px;
+      overflow: hidden;
+      box-shadow: 0 0 0 2px rgba(255,255,255,0.06), 0 20px 60px rgba(0,0,0,0.4);
+      transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.3s;
+    }
+
+    .screen-frame:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 0 0 2px rgba(192,86,33,0.2), 0 24px 70px rgba(0,0,0,0.5);
+    }
+
+    .screen-frame iframe {
+      width: 412px;
+      height: 915px;
+      border: none;
+      display: block;
+    }
+
+    /* Features */
+    .features {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 24px 60px;
+    }
+
+    .features h2 {
+      text-align: center;
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 32px;
+      color: rgba(255,255,255,0.9);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+    }
+
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 20px;
+      transition: border-color 0.2s;
+    }
+
+    .feature-card:hover {
+      border-color: rgba(192,86,33,0.3);
+    }
+
+    .feature-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: var(--accent-soft);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .feature-icon svg { width: 20px; height: 20px; }
+
+    .feature-card h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.9);
+      margin-bottom: 6px;
+    }
+
+    .feature-card p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 24px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      font-size: 12px;
+      color: rgba(255,255,255,0.3);
+    }
+
+    @media (max-width: 920px) {
+      .screens { flex-direction: column; align-items: center; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-badge">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      Protótipo Android
+    </div>
+    <h1><span>Link</span>Hub</h1>
+    <p>Gerenciador de links para perfis digitais com drag & drop, analytics e preview público.</p>
+  </div>
+
+  <div class="screens">
+    <div class="screen-wrapper">
+      <span class="screen-label">Boas-vindas</span>
+      <div class="screen-frame">
+        <iframe src="screens/onboarding.html" loading="lazy"></iframe>
+      </div>
+    </div>
+    <div class="screen-wrapper">
+      <span class="screen-label">Dashboard</span>
+      <div class="screen-frame">
+        <iframe src="screens/dashboard.html" loading="lazy"></iframe>
+      </div>
+    </div>
+    <div class="screen-wrapper">
+      <span class="screen-label">Preview Público</span>
+      <div class="screen-frame">
+        <iframe src="screens/preview.html" loading="lazy"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <div class="features">
+    <h2>Funcionalidades</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 9 2 12 5 15"/><polyline points="9 5 12 2 15 5"/><polyline points="15 19 12 22 9 19"/><polyline points="19 9 22 12 19 15"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/></svg>
+        </div>
+        <h3>Drag & Drop</h3>
+        <p>Reordene seus links arrastando — toque e segure no handle para mover.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </div>
+        <h3>Analytics Básico</h3>
+        <p>Veja quantos cliques cada link recebe. Entenda o engajamento em tempo real.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+        <h3>Preview Público</h3>
+        <p>Veja como sua página de links aparece para quem acessa seu perfil.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+        </div>
+        <h3>CRUD Completo</h3>
+        <p>Crie, edite, exclua e ative/desative links com uma interface fluida.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        </div>
+        <h3>7 Tipos de Link</h3>
+        <p>YouTube, Instagram, TikTok, Facebook, WhatsApp, Website ou personalizado.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="5" width="22" height="14" rx="7" ry="7"/><circle cx="16" cy="12" r="3"/></svg>
+        </div>
+        <h3>Android First</h3>
+        <p>Design nativo Material Design 3 com 48dp hit targets e navegação por toque.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    LinkHub — Protótipo de design para aplicação mobile Android
+  </div>
+</body>
+</html>

@@ -1,3 +1,5 @@
+import { BarChart3, MousePointerClick, TrendingUp } from "lucide-react";
+import type { ReactNode } from "react";
 import type { Link } from "../types/link";
 
 type StatsBarProps = {
@@ -11,18 +13,38 @@ export function StatsBar({ links }: StatsBarProps) {
 
   return (
     <div className="grid gap-3 sm:grid-cols-3">
-      <Stat label="Cliques totais" value={totalClicks.toLocaleString("pt-BR")} />
-      <Stat label="Links ativos" value={String(activeCount)} />
-      <Stat label="Melhor link" value={topLink?.title ?? "Sem links"} />
+      <Stat
+        icon={<MousePointerClick size={18} />}
+        label="Cliques totais"
+        value={totalClicks.toLocaleString("pt-BR")}
+        accent="bg-accent/10 text-accent"
+      />
+      <Stat
+        icon={<BarChart3 size={18} />}
+        label="Links ativos"
+        value={`${activeCount} / ${links.length}`}
+        accent="bg-success/10 text-success"
+      />
+      <Stat
+        icon={<TrendingUp size={18} />}
+        label="Melhor link"
+        value={topLink?.title ?? "Sem links"}
+        accent="bg-warning/10 text-warning"
+      />
     </div>
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ icon, label, value, accent }: { icon: ReactNode; label: string; value: string; accent: string }) {
   return (
-    <div className="rounded-md border border-ink/15 bg-linen p-4">
-      <p className="text-xs uppercase tracking-[0.16em] text-muted">{label}</p>
-      <p className="mt-2 truncate font-display text-2xl">{value}</p>
+    <div className="animate-fade-in rounded-lg border border-ink/10 bg-linen p-4 transition-all hover:shadow-sm">
+      <div className="flex items-center gap-2.5">
+        <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${accent}`}>
+          {icon}
+        </div>
+        <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted">{label}</p>
+      </div>
+      <p className="mt-3 truncate font-display text-2xl animate-counter">{value}</p>
     </div>
   );
 }

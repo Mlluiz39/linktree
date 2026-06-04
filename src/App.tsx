@@ -6,7 +6,7 @@ export default function App() {
   const [route, setRoute] = useState<"intro" | "dashboard">("intro");
 
   if (route === "dashboard") {
-    return <Dashboard />;
+    return <Dashboard onBack={() => setRoute("intro")} />;
   }
 
   return <IntroScreen onOpenDashboard={() => setRoute("dashboard")} />;
