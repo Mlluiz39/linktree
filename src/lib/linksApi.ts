@@ -10,15 +10,17 @@ import type { DbLink } from "./directus";
 
 // ---------------------------------------------------------------------------
 // Thin API layer — replaces linksStorage.ts
+//
+// SDK v21 generics are too strict for loosely-typed schemas.
+// We use `as any` on the client and request calls — runtime works fine.
 // ---------------------------------------------------------------------------
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const client = directus as any;
+
 export async function fetchLinks(): Promise<Link[]> {
-  const rows = await directus.request(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    readItems("links" as any, {
-      sort: ["sort"],
-      limit: -1,
-    }),
+  const rows = await client.request(
+    readItems("links", { sort: ["sort"], limit: -1 }),
   );
   return (rows as unknown as DbLink[]).map(toLink);
 }
@@ -27,14 +29,12 @@ export async function createLink(
   draft: LinkDraft,
   order: number,
 ): Promise<Link> {
-  const row = await directus.request(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    createItem("links" as any, {
+  const row = await client.request(
+    createItem("links", {
       ...toDbPayload(draft),
       sort: order,
       clicks: 0,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any),
+    }),
   );
   return toLink(row as unknown as DbLink);
 }
@@ -43,25 +43,20 @@ export async function updateLink(
   id: string,
   patch: Partial<Link>,
 ): Promise<Link> {
-  const row = await directus.request(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    updateItem("links" as any, id, toDbPayload(patch) as any),
+  const row = await client.request(
+    updateItem("links", id, toDbPayload(patch)),
   );
   return toLink(row as unknown as DbLink);
 }
 
 export async function deleteLink(id: string): Promise<void> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await directus.request(deleteItem("links" as any, id));
+  await client.request(deleteItem("links", id));
 }
 
 export async function reorderLinks(ids: string[]): Promise<void> {
   await Promise.all(
     ids.map((id, index) =>
-      directus.request(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        updateItem("links" as any, id, { sort: index } as any),
-      ),
+      client.request(updateItem("links", id, { sort: index })),
     ),
   );
 }

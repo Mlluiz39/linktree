@@ -18,14 +18,7 @@ export type DbLink = {
 };
 
 // ---------------------------------------------------------------------------
-// Schema for Directus SDK
-// ---------------------------------------------------------------------------
-type AppSchema = Record<string, unknown> & {
-  links: DbLink[];
-};
-
-// ---------------------------------------------------------------------------
-// Directus client — URL is statically replaced by Vite at build time
+// Directus client — untyped to avoid SDK v21 generic headaches
 // ---------------------------------------------------------------------------
 function resolveUrl(): string {
   const configured = import.meta.env.VITE_DIRECTUS_URL ?? "/directus";
@@ -35,7 +28,7 @@ function resolveUrl(): string {
 
 const directusUrl = typeof window !== "undefined" ? resolveUrl() : "http://localhost:8055";
 
-export const directus = createDirectus<AppSchema>(directusUrl)
+export const directus = createDirectus(directusUrl)
   .with(authentication("cookie", { credentials: "include" }))
   .with(rest());
 
