@@ -1,6 +1,12 @@
-import { ArrowLeft, Eye, Plus, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import { loadLinks, saveLinks, sortLinks } from "../lib/linksStorage";
+import { ArrowLeft, Eye, Loader2, Plus, X } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  createLink as apiCreateLink,
+  deleteLink as apiDeleteLink,
+  fetchLinks,
+  reorderLinks as apiReorderLinks,
+  updateLink as apiUpdateLink,
+} from "../lib/linksApi";
 import type { Link, LinkDraft } from "../types/link";
 import { LinkEditorModal } from "./LinkEditorModal";
 import { LinksList } from "./LinksList";
@@ -12,39 +18,65 @@ type DashboardProps = {
 };
 
 export function Dashboard({ onBack }: DashboardProps) {
-  const [links, setLinks] = useState<Link[]>(() => loadLinks());
+  const [links, setLinks] = useState<Link[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingLink, setEditingLink] = useState<Link | null>(null);
   const [showMobilePreview, setShowMobilePreview] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const orderedLinks = useMemo(() => sortLinks(links), [links]);
+  // ── Initial load ────────────────────────────────────────────────────
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await fetchLinks();
+      setLinks(data);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Erro ao carregar links",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    saveLinks(links);
-  }, [links]);
+    loadData();
+  }, [loadData]);
+
+  // ── Derived sorted list (keep for StatsBar / PreviewPanel order) ────
+  const orderedLinks = useMemo(
+    () => [...links].sort((a, b) => a.order - b.order),
+    [links],
+  );
+
+  // ── Handlers ────────────────────────────────────────────────────────
 
   function openCreateModal() {
     setEditingLink(null);
     setIsModalOpen(true);
   }
 
-  function handleSave(draft: LinkDraft) {
-    setLinks((currentLinks) => {
+  async function handleSave(draft: LinkDraft) {
+    try {
       if (editingLink) {
-        return currentLinks.map((link) => link.id === editingLink.id ? { ...link, ...draft } : link);
+        const updated = await apiUpdateLink(editingLink.id, draft);
+        setLinks((prev) =>
+          prev.map((l) => (l.id === editingLink.id ? updated : l)),
+        );
+      } else {
+        const created = await apiCreateLink(draft, links.length);
+        setLinks((prev) => [...prev, created]);
       }
-      const nextOrder = currentLinks.length;
-      const newLink: Link = {
-        id: crypto.randomUUID(),
-        ...draft,
-        clicks: 0,
-        order: nextOrder,
-        createdAt: new Date().toISOString()
-      };
-      return [...currentLinks, newLink];
-    });
-    setIsModalOpen(false);
-    setEditingLink(null);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Erro ao salvar link",
+      );
+    } finally {
+      setIsModalOpen(false);
+      setEditingLink(null);
+    }
   }
 
   function handleEdit(link: Link) {
@@ -52,13 +84,59 @@ export function Dashboard({ onBack }: DashboardProps) {
     setIsModalOpen(true);
   }
 
-  function handleDelete(id: string) {
-    setLinks((currentLinks) => currentLinks.filter((link) => link.id !== id).map((link, index) => ({ ...link, order: index })));
+  async function handleDelete(id: string) {
+    try {
+      await apiDeleteLink(id);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Erro ao excluir link",
+      );
+      return; // don't optimistically remove
+    }
+    setLinks((prev) =>
+      prev
+        .filter((l) => l.id !== id)
+        .map((l, i) => ({ ...l, order: i })),
+    );
   }
 
-  function handleToggle(id: string) {
-    setLinks((currentLinks) => currentLinks.map((link) => link.id === id ? { ...link, active: !link.active } : link));
+  async function handleToggle(id: string) {
+    const link = links.find((l) => l.id === id);
+    if (!link) return;
+    const nextActive = !link.active;
+    // Optimistic update
+    setLinks((prev) =>
+      prev.map((l) => (l.id === id ? { ...l, active: nextActive } : l)),
+    );
+    try {
+      await apiUpdateLink(id, { active: nextActive });
+    } catch (err) {
+      // Revert on failure
+      setLinks((prev) =>
+        prev.map((l) =>
+          l.id === id ? { ...l, active: link.active } : l,
+        ),
+      );
+      setError(
+        err instanceof Error ? err.message : "Erro ao alternar link",
+      );
+    }
   }
+
+  async function handleReorder(reordered: Link[]) {
+    // Optimistic update
+    setLinks(reordered);
+    try {
+      await apiReorderLinks(reordered.map((l) => l.id));
+    } catch (err) {
+      loadData(); // reload from server on failure
+      setError(
+        err instanceof Error ? err.message : "Erro ao reordenar links",
+      );
+    }
+  }
+
+  // ── Render ──────────────────────────────────────────────────────────
 
   return (
     <main className="min-h-screen bg-parchment px-4 py-5 text-ink sm:px-8">
@@ -76,40 +154,74 @@ export function Dashboard({ onBack }: DashboardProps) {
               </button>
             ) : null}
             <div>
-              <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-muted">LinkHub</p>
-              <h1 className="font-display text-3xl sm:text-4xl">Links Manager</h1>
+              <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-muted">
+                LinkHub
+              </p>
+              <h1 className="font-display text-3xl sm:text-4xl">
+                Links Manager
+              </h1>
             </div>
           </div>
           <button
             type="button"
             onClick={openCreateModal}
-            className="inline-flex items-center gap-2 rounded-lg bg-ink px-5 py-3 text-sm font-semibold text-linen shadow-[0_8px_25px_rgba(29,27,22,0.18)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_35px_rgba(29,27,22,0.22)]"
+            disabled={loading}
+            className="inline-flex items-center gap-2 rounded-lg bg-ink px-5 py-3 text-sm font-semibold text-linen shadow-[0_8px_25px_rgba(29,27,22,0.18)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_35px_rgba(29,27,22,0.22)] disabled:opacity-50"
           >
             <Plus size={18} />
             Novo link
           </button>
         </header>
 
-        <div className="mb-5">
-          <StatsBar links={orderedLinks} />
-        </div>
+        {/* ── Error banner ─────────────────────────────────── */}
+        {error ? (
+          <div className="animate-fade-in mb-5 flex items-center justify-between rounded-lg border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
+            <span>{error}</span>
+            <button
+              type="button"
+              onClick={() => setError(null)}
+              className="ml-3 rounded-full p-1 hover:bg-danger/20"
+              aria-label="Fechar"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        ) : null}
 
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
-          <div className="animate-fade-in rounded-xl border border-ink/10 bg-linen p-5">
-            <p className="mb-4 text-[11px] font-medium uppercase tracking-[0.18em] text-muted">Sua ordem pública</p>
-            <LinksList
-              links={orderedLinks}
-              onReorder={setLinks}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              onToggle={handleToggle}
-              onCreate={openCreateModal}
-            />
+        {/* ── Loading state ────────────────────────────────── */}
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 size={28} className="animate-spin text-muted" />
+            <span className="ml-3 text-sm text-muted">
+              Carregando links...
+            </span>
           </div>
-          <div className="hidden lg:block">
-            <PreviewPanel links={orderedLinks} />
-          </div>
-        </div>
+        ) : (
+          <>
+            <div className="mb-5">
+              <StatsBar links={orderedLinks} />
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+              <div className="animate-fade-in rounded-xl border border-ink/10 bg-linen p-5">
+                <p className="mb-4 text-[11px] font-medium uppercase tracking-[0.18em] text-muted">
+                  Sua ordem pública
+                </p>
+                <LinksList
+                  links={orderedLinks}
+                  onReorder={handleReorder}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  onToggle={handleToggle}
+                  onCreate={openCreateModal}
+                />
+              </div>
+              <div className="hidden lg:block">
+                <PreviewPanel links={orderedLinks} />
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Mobile preview FAB */}
@@ -126,11 +238,15 @@ export function Dashboard({ onBack }: DashboardProps) {
       {showMobilePreview ? (
         <div
           className="animate-overlay-in fixed inset-0 z-50 bg-ink/40 backdrop-blur-sm lg:hidden"
-          onClick={(e) => { if (e.target === e.currentTarget) setShowMobilePreview(false); }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowMobilePreview(false);
+          }}
         >
           <div className="animate-slide-up absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-2xl bg-parchment p-4">
             <div className="mb-3 flex items-center justify-between">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted">Preview público</p>
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted">
+                Preview público
+              </p>
               <button
                 type="button"
                 onClick={() => setShowMobilePreview(false)}
@@ -146,7 +262,11 @@ export function Dashboard({ onBack }: DashboardProps) {
       ) : null}
 
       {isModalOpen ? (
-        <LinkEditorModal editingLink={editingLink} onClose={() => setIsModalOpen(false)} onSave={handleSave} />
+        <LinkEditorModal
+          editingLink={editingLink}
+          onClose={() => setIsModalOpen(false)}
+          onSave={handleSave}
+        />
       ) : null}
     </main>
   );

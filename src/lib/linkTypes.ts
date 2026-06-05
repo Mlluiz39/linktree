@@ -2,7 +2,8 @@ import { Facebook, Globe, Instagram, MessageCircle, MonitorPlay, Palette, Youtub
 import type { ComponentType } from "react";
 import type { LinkType } from "../types/link";
 
-type IconProps = { size?: number; className?: string };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type IconComponent = ComponentType<any>;
 
 export const LINK_TYPE_LABELS: Record<LinkType, string> = {
   youtube: "YouTube",
@@ -14,7 +15,7 @@ export const LINK_TYPE_LABELS: Record<LinkType, string> = {
   custom: "Personalizado"
 };
 
-export const LINK_TYPE_ICONS: Record<LinkType, ComponentType<IconProps>> = {
+export const LINK_TYPE_ICONS: Record<LinkType, IconComponent> = {
   youtube: Youtube,
   instagram: Instagram,
   tiktok: MonitorPlay,
