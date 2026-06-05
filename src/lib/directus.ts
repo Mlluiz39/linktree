@@ -2,13 +2,8 @@ import { createDirectus, rest, authentication } from "@directus/sdk";
 import type { Link } from "../types/link";
 
 // ---------------------------------------------------------------------------
-// Schema — maps frontend Link type to Directus collection shape.
-// "links" collection in PostgreSQL (see src/schema.sql).
+// DB row shape (matches src/schema.sql)
 // ---------------------------------------------------------------------------
-export type AppSchema = {
-  links: DbLink[];
-};
-
 export type DbLink = {
   id: string;
   user_created: string | null;
@@ -23,25 +18,31 @@ export type DbLink = {
 };
 
 // ---------------------------------------------------------------------------
-// Lazy Directus client — only created on first use, avoids crash on import
+// Schema for Directus SDK
 // ---------------------------------------------------------------------------
-let _client: ReturnType<typeof createDirectus<AppSchema>> | null = null;
+type AppSchema = Record<string, unknown> & {
+  links: DbLink[];
+};
 
-export function getDirectus() {
-  if (!_client) {
-    const url = import.meta.env.VITE_DIRECTUS_URL ?? "/directus";
-    _client = createDirectus<AppSchema>(url)
-      .with(authentication("cookie", { credentials: "include" }))
-      .with(rest());
-  }
-  return _client;
+// ---------------------------------------------------------------------------
+// Directus client — URL is statically replaced by Vite at build time
+// ---------------------------------------------------------------------------
+function resolveUrl(): string {
+  const configured = import.meta.env.VITE_DIRECTUS_URL ?? "/directus";
+  if (configured.startsWith("http")) return configured;
+  return `${window.location.origin}${configured}`;
 }
+
+const directusUrl = typeof window !== "undefined" ? resolveUrl() : "http://localhost:8055";
+
+export const directus = createDirectus<AppSchema>(directusUrl)
+  .with(authentication("cookie", { credentials: "include" }))
+  .with(rest());
 
 // ---------------------------------------------------------------------------
 // Field mapping helpers
 // ---------------------------------------------------------------------------
 
-/** DB row → frontend Link */
 export function toLink(row: DbLink): Link {
   return {
     id: row.id,
@@ -55,7 +56,6 @@ export function toLink(row: DbLink): Link {
   };
 }
 
-/** Frontend Link → DB column names (for create/update payloads) */
 export function toDbPayload(
   link: Partial<Omit<Link, "id" | "createdAt">>,
 ): Record<string, unknown> {
