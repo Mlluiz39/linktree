@@ -75,9 +75,9 @@ export function LinkCard({ link, index, onEdit, onDelete, onToggle }: LinkCardPr
                 {LINK_TYPE_LABELS[link.type]}
               </span>
             </div>
-            <p className="mt-0.5 flex items-start gap-1 text-xs text-muted">
-              <ExternalLink size={11} className="mt-0.5 flex-shrink-0" />
-              <span className="min-w-0 break-all">{link.url}</span>
+            <p className="mt-0.5 flex items-center gap-1 overflow-hidden text-xs text-muted">
+              <ExternalLink size={11} className="flex-shrink-0" />
+              <span className="truncate">{link.url}</span>
             </p>
             <p className="mt-1 text-xs">
               <span className="font-semibold">
