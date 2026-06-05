@@ -14,12 +14,13 @@ import type { DbLink } from "./directus";
 
 export async function fetchLinks(): Promise<Link[]> {
   const rows = await directus.request(
-    readItems("links" as never, {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    readItems("links" as any, {
       sort: ["sort"],
       limit: -1,
     }),
   );
-  return (rows as DbLink[]).map(toLink);
+  return (rows as unknown as DbLink[]).map(toLink);
 }
 
 export async function createLink(
@@ -27,13 +28,15 @@ export async function createLink(
   order: number,
 ): Promise<Link> {
   const row = await directus.request(
-    createItem("links" as never, {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    createItem("links" as any, {
       ...toDbPayload(draft),
       sort: order,
       clicks: 0,
-    } as never),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any),
   );
-  return toLink(row as DbLink);
+  return toLink(row as unknown as DbLink);
 }
 
 export async function updateLink(
@@ -41,20 +44,23 @@ export async function updateLink(
   patch: Partial<Link>,
 ): Promise<Link> {
   const row = await directus.request(
-    updateItem("links" as never, id, toDbPayload(patch) as never),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    updateItem("links" as any, id, toDbPayload(patch) as any),
   );
-  return toLink(row as DbLink);
+  return toLink(row as unknown as DbLink);
 }
 
 export async function deleteLink(id: string): Promise<void> {
-  await directus.request(deleteItem("links" as never, id));
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await directus.request(deleteItem("links" as any, id));
 }
 
 export async function reorderLinks(ids: string[]): Promise<void> {
   await Promise.all(
     ids.map((id, index) =>
       directus.request(
-        updateItem("links" as never, id, { sort: index } as never),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        updateItem("links" as any, id, { sort: index } as any),
       ),
     ),
   );
