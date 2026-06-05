@@ -34,11 +34,12 @@ export function LinkCard({ link, index, onEdit, onDelete, onToggle }: LinkCardPr
           : "border-ink/10 shadow-sm hover:shadow-md hover:border-ink/20"
       } ${!link.active ? "opacity-60" : ""}`}
     >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-        <div className="flex min-w-0 flex-1 gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
+        {/* ── Main content (drag handle + icon + info) ── */}
+        <div className="flex min-w-0 flex-1 gap-2.5 sm:gap-3">
           <button
             type="button"
-            className="mt-1 rounded-md p-1.5 text-muted/60 transition-colors hover:bg-parchment hover:text-muted"
+            className="mt-1 flex-shrink-0 rounded-md p-1.5 text-muted/60 transition-colors hover:bg-parchment hover:text-muted"
             aria-label="Arrastar link"
             {...attributes}
             {...listeners}
@@ -50,14 +51,16 @@ export function LinkCard({ link, index, onEdit, onDelete, onToggle }: LinkCardPr
             <TypeIcon size={18} className={colors.text} />
           </div>
 
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h3 className="truncate font-semibold leading-tight">{link.title}</h3>
-              <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium ${colors.badge}`}>
+          <div className="min-w-0 flex-1 overflow-hidden">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <h3 className="max-w-full truncate font-semibold leading-tight">{link.title}</h3>
+              <span className={`flex-shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${colors.badge}`}>
                 {LINK_TYPE_LABELS[link.type]}
               </span>
             </div>
-            <p className="mt-1 truncate text-sm text-muted">{link.url}</p>
+            <p className="mt-1 truncate text-sm text-muted" title={link.url}>
+              {link.url}
+            </p>
             <p className="mt-2.5 text-sm">
               <span className="font-semibold">{link.clicks.toLocaleString("pt-BR")}</span>
               <span className="text-muted"> cliques</span>
@@ -65,14 +68,15 @@ export function LinkCard({ link, index, onEdit, onDelete, onToggle }: LinkCardPr
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-3 sm:justify-end">
+        {/* ── Actions (toggle + edit + delete) ── */}
+        <div className="flex flex-shrink-0 items-center justify-between gap-2 sm:justify-end">
           <ToggleSwitch
             checked={link.active}
             onChange={() => onToggle(link.id)}
             label={link.active ? "Ativo" : "Inativo"}
             id={`toggle-${link.id}`}
           />
-          <div className="flex items-center gap-0.5">
+          <div className="flex flex-shrink-0 items-center gap-0.5">
             <button
               type="button"
               onClick={() => onEdit(link)}
