@@ -14,11 +14,13 @@ type LinkCardProps = {
 };
 
 export function LinkCard({ link, index, onEdit, onDelete, onToggle }: LinkCardProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: link.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: link.id,
+  });
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    animationDelay: `${index * 60}ms`
+    animationDelay: `${index * 60}ms`,
   };
 
   const TypeIcon = LINK_TYPE_ICONS[link.type];
@@ -28,14 +30,14 @@ export function LinkCard({ link, index, onEdit, onDelete, onToggle }: LinkCardPr
     <article
       ref={setNodeRef}
       style={style}
-      className={`stagger-item rounded-lg border bg-white transition-all duration-200 ${
+      className={`stagger-item overflow-hidden rounded-lg border bg-white transition-all duration-200 ${
         isDragging
           ? "scale-[1.02] border-accent/30 shadow-[0_20px_60px_rgba(99,102,241,0.15)] ring-2 ring-accent/20"
           : "border-ink/10 shadow-sm hover:shadow-md hover:border-ink/20"
       } ${!link.active ? "opacity-60" : ""}`}
     >
-      <div className="flex items-stretch gap-0">
-        {/* ── Drag handle ── */}
+      <div className="flex min-w-0 items-stretch">
+        {/* Drag handle */}
         <button
           type="button"
           className="flex-shrink-0 rounded-l-lg px-1.5 text-muted/40 transition-colors hover:bg-parchment hover:text-muted/70"
@@ -46,39 +48,47 @@ export function LinkCard({ link, index, onEdit, onDelete, onToggle }: LinkCardPr
           <GripVertical size={18} />
         </button>
 
-        {/* ── Clickable area → opens original URL ── */}
+        {/* Clickable area — opens original URL in new tab */}
         <a
           href={link.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex min-w-0 flex-1 items-center gap-3 p-3 pl-1 no-underline sm:p-4"
+          className="flex min-w-0 flex-1 items-center gap-2.5 p-2.5 no-underline sm:gap-3 sm:p-4"
           title={`Abrir ${link.title}`}
         >
-          <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg ${colors.bg}`}>
+          {/* Icon */}
+          <div
+            className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg sm:h-9 sm:w-9 ${colors.bg}`}
+          >
             <TypeIcon size={18} className={colors.text} />
           </div>
 
-          <div className="min-w-0 flex-1 overflow-hidden">
-            <div className="flex items-center gap-2">
-              <h3 className="truncate text-sm font-semibold leading-tight sm:text-base">
+          {/* Text content */}
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+              <h3 className="truncate text-sm font-semibold leading-tight">
                 {link.title}
               </h3>
-              <span className={`flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${colors.badge}`}>
+              <span
+                className={`inline-block flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium leading-none ${colors.badge}`}
+              >
                 {LINK_TYPE_LABELS[link.type]}
               </span>
             </div>
-            <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted sm:text-sm">
-              <ExternalLink size={11} className="flex-shrink-0" />
-              <span>{link.url}</span>
+            <p className="mt-0.5 flex items-start gap-1 text-xs text-muted">
+              <ExternalLink size={11} className="mt-0.5 flex-shrink-0" />
+              <span className="min-w-0 break-all">{link.url}</span>
             </p>
-            <p className="mt-1 text-xs sm:text-sm">
-              <span className="font-semibold">{link.clicks.toLocaleString("pt-BR")}</span>
+            <p className="mt-1 text-xs">
+              <span className="font-semibold">
+                {link.clicks.toLocaleString("pt-BR")}
+              </span>
               <span className="text-muted"> cliques</span>
             </p>
           </div>
         </a>
 
-        {/* ── Actions (toggle + edit + delete) ── */}
+        {/* Actions column */}
         <div className="flex flex-shrink-0 items-center gap-1 border-l border-ink/5 px-2 sm:px-3">
           <ToggleSwitch
             checked={link.active}
