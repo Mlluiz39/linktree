@@ -1,73 +1,126 @@
 export default {
-    content: ["./index.html", "./src/**/*.{ts,tsx}"],
-    theme: {
-        extend: {
-            colors: {
-                ink: "#1d1b16",
-                parchment: "#f7f2e8",
-                linen: "#fffaf1",
-                brass: "#b78b43",
-                moss: "#24594d",
-                muted: "#776b5d",
-                accent: {
-                    DEFAULT: "#6366f1",
-                    light: "#818cf8",
-                    dark: "#4f46e5"
-                },
-                success: {
-                    DEFAULT: "#22c55e",
-                    light: "#4ade80",
-                    dark: "#16a34a"
-                },
-                danger: {
-                    DEFAULT: "#ef4444",
-                    light: "#f87171",
-                    dark: "#dc2626"
-                },
-                warning: {
-                    DEFAULT: "#f59e0b",
-                    light: "#fbbf24"
-                }
-            },
-            fontFamily: {
-                display: ["'DM Serif Display'", "Georgia", "Cambria", "serif"],
-                body: ["'Inter'", "system-ui", "sans-serif"]
-            },
-            keyframes: {
-                "fade-in": {
-                    from: { opacity: "0", transform: "translateY(8px)" },
-                    to: { opacity: "1", transform: "translateY(0)" }
-                },
-                "fade-in-up": {
-                    from: { opacity: "0", transform: "translateY(20px)" },
-                    to: { opacity: "1", transform: "translateY(0)" }
-                },
-                "scale-in": {
-                    from: { opacity: "0", transform: "scale(0.95)" },
-                    to: { opacity: "1", transform: "scale(1)" }
-                },
-                "overlay-in": {
-                    from: { opacity: "0" },
-                    to: { opacity: "1" }
-                },
-                "slide-up": {
-                    from: { opacity: "0", transform: "translateY(100%)" },
-                    to: { opacity: "1", transform: "translateY(0)" }
-                },
-                "counter": {
-                    from: { opacity: "0", transform: "translateY(4px)" },
-                    to: { opacity: "1", transform: "translateY(0)" }
-                }
-            },
-            animation: {
-                "fade-in": "fade-in 0.4s ease-out both",
-                "fade-in-up": "fade-in-up 0.5s ease-out both",
-                "scale-in": "scale-in 0.25s ease-out both",
-                "overlay-in": "overlay-in 0.2s ease-out both",
-                "slide-up": "slide-up 0.35s ease-out both",
-                "counter": "counter 0.5s ease-out both"
-            }
-        }
+  darkMode: "class",
+  content: ["./index.html", "./src/**/*.{ts,tsx}"],
+  theme: {
+    extend: {
+      colors: {
+        "surface-container": "#1f1f23",
+        "on-error-container": "#ffdad6",
+        "on-secondary-fixed": "#191c21",
+        "on-tertiary-fixed-variant": "#45474c",
+        "text-secondary": "#8B8D94",
+        "text-primary": "#F2F1ED",
+        "on-primary-fixed": "#2e1500",
+        secondary: "#c5c6ce",
+        "inverse-on-surface": "#303034",
+        error: "#ffb4ab",
+        "on-primary-container": "#552c00",
+        "border-low": "#2A2C31",
+        "inverse-surface": "#e3e2e6",
+        "surface-container-highest": "#343538",
+        "on-secondary": "#2e3036",
+        "on-secondary-container": "#b3b5bc",
+        "primary-container": "#d98e4a",
+        "primary-fixed": "#ffdcc2",
+        "on-surface-variant": "#d8c3b4",
+        "secondary-container": "#44474d",
+        "inverse-primary": "#8c4f0e",
+        "secondary-fixed": "#e1e2ea",
+        "surface-container-high": "#292a2d",
+        "outline-variant": "#534439",
+        surface: "#17191D",
+        danger: "#C75C4A",
+        "on-tertiary": "#2e3035",
+        "on-tertiary-container": "#34363b",
+        "on-surface": "#e3e2e6",
+        primary: "#ffb77a",
+        tertiary: "#c5c6cc",
+        "surface-tint": "#ffb77a",
+        outline: "#a08d80",
+        "surface-dim": "#121316",
+        "on-tertiary-fixed": "#191c20",
+        "surface-variant": "#343538",
+        "tertiary-fixed": "#e2e2e9",
+        background: "#121316",
+        "surface-bright": "#38393c",
+        "secondary-fixed-dim": "#c5c6ce",
+        "tertiary-fixed-dim": "#c5c6cc",
+        "error-container": "#93000a",
+        "on-error": "#690005",
+        "primary-fixed-dim": "#ffb77a",
+        "surface-container-low": "#1b1b1f",
+        "on-background": "#e3e2e6",
+        "on-secondary-fixed-variant": "#44474d",
+        "tertiary-container": "#9e9fa5",
+        "on-primary-fixed-variant": "#6d3a00",
+        "surface-container-lowest": "#0d0e11",
+        "on-primary": "#4c2700",
+      },
+      borderRadius: {
+        DEFAULT: "0.125rem",
+        lg: "0.25rem",
+        xl: "0.5rem",
+        "2xl": "0.75rem",
+        full: "9999px",
+      },
+      borderWidth: {
+        "divider-width": "1px",
+      },
+      spacing: {
+        "stack-md": "16px",
+        "stack-sm": "8px",
+        "stack-lg": "32px",
+        gutter: "16px",
+        "container-margin": "20px",
+        "divider-width": "1px",
+      },
+      fontFamily: {
+        "headline-lg": ["Newsreader", "serif"],
+        "headline-md": ["Newsreader", "serif"],
+        caption: ["Manrope", "sans-serif"],
+        "body-md": ["Manrope", "sans-serif"],
+        "body-lg": ["Manrope", "sans-serif"],
+        "title-sm": ["Newsreader", "serif"],
+        display: ["Newsreader", "serif"],
+        "label-caps": ["Manrope", "sans-serif"],
+        button: ["Manrope", "sans-serif"],
+      },
+      fontSize: {
+        "headline-lg": ["24px", { lineHeight: "1.3", fontWeight: "500" }],
+        "headline-md": ["22px", { lineHeight: "1.3", fontWeight: "500" }],
+        caption: ["12px", { lineHeight: "1.4", fontWeight: "400" }],
+        "body-md": ["14px", { lineHeight: "1.5", fontWeight: "400" }],
+        "body-lg": ["15px", { lineHeight: "1.5", fontWeight: "400" }],
+        "title-sm": ["15px", { lineHeight: "1.4", fontWeight: "500" }],
+        display: ["32px", { lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "500" }],
+        "label-caps": ["12px", { lineHeight: "1.2", letterSpacing: "0.05em", fontWeight: "600" }],
+        button: ["14px", { lineHeight: "1", fontWeight: "600" }],
+      },
+      keyframes: {
+        "fade-in": {
+          from: { opacity: "0", transform: "translateY(8px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "scale-in": {
+          from: { opacity: "0", transform: "scale(0.97)" },
+          to: { opacity: "1", transform: "scale(1)" },
+        },
+        "overlay-in": {
+          from: { opacity: "0" },
+          to: { opacity: "1" },
+        },
+        "slide-up": {
+          from: { transform: "translateY(100%)" },
+          to: { transform: "translateY(0)" },
+        },
+      },
+      animation: {
+        "fade-in": "fade-in 0.35s ease-out both",
+        "scale-in": "scale-in 0.2s ease-out both",
+        "overlay-in": "overlay-in 0.2s ease-out both",
+        "slide-up": "slide-up 0.3s cubic-bezier(0.4, 0, 0.2, 1) both",
+      },
     },
-    plugins: []
+  },
+  plugins: [],
 };
