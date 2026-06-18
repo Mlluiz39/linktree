@@ -109,19 +109,27 @@ export function LinksScreen({
                     key={link.id}
                     className="flex items-center px-container-margin py-stack-md border-b border-border-low w-full"
                   >
-                    <div className="flex-shrink-0 w-10 h-10 rounded-full border border-border-low flex items-center justify-center bg-transparent mr-gutter">
-                      <span className="material-symbols-outlined text-text-primary">
-                        {LINK_TYPE_ICONS[link.type]}
-                      </span>
-                    </div>
-                    <div className="flex-grow flex flex-col min-w-0 pr-gutter">
-                      <span className="font-title-sm text-title-sm text-text-primary truncate">
-                        {link.title}
-                      </span>
-                      <span className="font-caption text-caption text-text-secondary truncate mt-1">
-                        {displayUrl(link.url)}
-                      </span>
-                    </div>
+                    <a
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center min-w-0 flex-grow no-underline"
+                      title={`Abrir ${link.title}`}
+                    >
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full border border-border-low flex items-center justify-center bg-transparent mr-gutter">
+                        <span className="material-symbols-outlined text-text-primary">
+                          {LINK_TYPE_ICONS[link.type]}
+                        </span>
+                      </div>
+                      <div className="flex-grow flex flex-col min-w-0 pr-gutter">
+                        <span className="font-title-sm text-title-sm text-text-primary truncate">
+                          {link.title}
+                        </span>
+                        <span className="font-caption text-caption text-text-secondary truncate mt-1">
+                          {displayUrl(link.url)}
+                        </span>
+                      </div>
+                    </a>
                     <button
                       type="button"
                       onClick={() => onMore(link)}
