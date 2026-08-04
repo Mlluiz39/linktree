@@ -4,6 +4,7 @@ import { IntroScreen } from "./components/IntroScreen";
 import { LinkForm } from "./components/LinkForm";
 import { LinkOptionsSheet } from "./components/LinkOptionsSheet";
 import { LinksScreen } from "./components/LinksScreen";
+import { ResetPasswordScreen } from "./components/ResetPasswordScreen";
 import { SettingsScreen } from "./components/SettingsScreen";
 import {
   createLink as apiCreateLink,
@@ -31,6 +32,7 @@ export default function App() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [authChecking, setAuthChecking] = useState(true);
   const [authMode, setAuthMode] = useState<AuthMode | null>(null);
+  const [recovery, setRecovery] = useState(false);
   const [links, setLinks] = useState<Link[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,8 +55,11 @@ export default function App() {
 
   // Restore / observe the Supabase session.
   useEffect(() => {
-    const unsubscribe = onAuthStateChange((session) => {
+    const unsubscribe = onAuthStateChange((event, session) => {
       setUser(session ? toAuthUser(session.user) : null);
+      if (event === "PASSWORD_RECOVERY") {
+        setRecovery(true);
+      }
     });
     getSession().then((session) => {
       setUser(session ? toAuthUser(session.user) : null);
@@ -113,6 +118,7 @@ export default function App() {
 
   async function handleLogout() {
     setAuthMode(null);
+    setRecovery(false);
     try {
       await apiSignOut();
     } catch {
@@ -151,6 +157,17 @@ export default function App() {
       <IntroScreen
         onSignup={() => setAuthMode("signup")}
         onLogin={() => setAuthMode("login")}
+      />
+    );
+  }
+
+  if (user && recovery) {
+    return (
+      <ResetPasswordScreen
+        onDone={() => {
+          setRecovery(false);
+          setRoute("links");
+        }}
       />
     );
   }

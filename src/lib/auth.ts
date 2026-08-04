@@ -48,11 +48,57 @@ export async function getSession(): Promise<Session | null> {
   return data.session;
 }
 
-export function onAuthStateChange(
-  callback: (session: Session | null) => void,
-): () => void {
-  const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-    callback(session);
+export type AuthEvent =
+  | "INITIAL_SESSION"
+  | "SIGNED_IN"
+  | "SIGNED_OUT"
+  | "PASSWORD_RECOVERY"
+  | "TOKEN_REFRESHED"
+  | "USER_UPDATED";
+
+export type AuthChangeCallback = (event: AuthEvent, session: Session | null) => void;
+
+export function onAuthStateChange(callback: AuthChangeCallback): () => void {
+  const { data } = supabase.auth.onAuthStateChange((event, session) => {
+    callback(event as AuthEvent, session);
   });
   return () => data.subscription.unsubscribe();
 }
+
+export async function resetPassword(email: string): Promise<void> {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo:
+      typeof window !== "undefined" ? window.location.origin : undefined,
+  });
+  if (error) throw error;
+}
+
+export async function updatePassword(password: string): Promise<void> {
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) throw error;
+}
+
+// Maps common Supabase Auth errors to friendly PT-BR messages.
+export function getAuthErrorMessage(err: unknown): string {
+  const message =
+    err instanceof Error && err.message ? err.message.toLowerCase() : "";
+  if (message.includes("invalid login credentials"))
+    return "E-mail ou senha incorretos.";
+  if (message.includes("email not confirmed"))
+    return "E-mail ainda não confirmado. Verifique sua caixa de entrada.";
+  if (message.includes("already registered"))
+    return "Este e-mail já está cadastrado. Faça login.";
+  if (message.includes("at least 8 characters"))
+    return "A senha deve ter no mínimo 8 caracteres.";
+  if (
+    message.includes("invalid email") ||
+    message.includes("unable to validate")
+  )
+    return "Endereço de e-mail inválido.";
+  if (message.includes("rate limit") || message.includes("too many"))
+    return "Muitas tentativas. Tente novamente em alguns instantes.";
+  return err instanceof Error && err.message
+    ? err.message
+    : "Não foi possível continuar.";
+}
+

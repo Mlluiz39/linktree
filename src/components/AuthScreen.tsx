@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { signIn, signUp } from "../lib/auth";
+import { getAuthErrorMessage, resetPassword, signIn, signUp } from "../lib/auth";
 
 type AuthScreenProps = {
   mode: "login" | "signup";
@@ -14,6 +14,7 @@ export function AuthScreen({ mode, onSwitchMode, onSuccess }: AuthScreenProps) {
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [loading, setLoading] = useState(false);
+  const [view, setView] = useState<"form" | "reset">("form");
 
   const isLogin = mode === "login";
   const inputClass =
@@ -59,10 +60,104 @@ export function AuthScreen({ mode, onSwitchMode, onSuccess }: AuthScreenProps) {
         }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Não foi possível continuar.");
+      setError(getAuthErrorMessage(err));
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleReset(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError("");
+    setInfo("");
+    const trimmed = email.trim();
+    if (!trimmed) {
+      setError("Informe seu e-mail.");
+      return;
+    }
+    setLoading(true);
+    try {
+      await resetPassword(trimmed);
+      setInfo("Enviamos um link para redefinir sua senha. Verifique seu e-mail.");
+    } catch (err) {
+      setError(getAuthErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (view === "reset") {
+    return (
+      <div className="bg-background text-text-primary min-h-screen flex flex-col antialiased">
+        <header className="flex justify-start items-center w-full px-container-margin h-16 border-b border-border-low bg-surface shrink-0">
+          <button
+            type="button"
+            onClick={() => setView("form")}
+            aria-label="Voltar"
+            className="flex items-center justify-center mr-4 hover:opacity-80 transition-opacity"
+          >
+            <span className="material-symbols-outlined text-text-primary">arrow_back</span>
+          </button>
+          <h1 className="font-headline-lg text-headline-lg text-text-primary tracking-tight">
+            Recuperar senha
+          </h1>
+        </header>
+
+        <main className="flex-1 flex flex-col px-container-margin py-stack-lg w-full max-w-md mx-auto">
+          <p className="font-body-md text-body-md text-text-secondary mb-stack-lg">
+            Informe seu e-mail e enviaremos um link para redefinir sua senha.
+          </p>
+
+          <form onSubmit={handleReset} className="flex flex-col gap-stack-md">
+            <div className="flex flex-col gap-stack-sm">
+              <label className="font-body-md text-body-md text-text-secondary" htmlFor="reset-email">
+                E-mail
+              </label>
+              <input
+                id="reset-email"
+                type="email"
+                autoComplete="email"
+                placeholder="voce@exemplo.com"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setError("");
+                }}
+                className={inputClass}
+              />
+            </div>
+
+            {error ? (
+              <p className="rounded-lg bg-danger/10 px-3 py-2 font-body-md text-body-md text-danger">
+                {error}
+              </p>
+            ) : null}
+
+            {info ? (
+              <p className="rounded-lg bg-primary-container/10 px-3 py-2 font-body-md text-body-md text-primary">
+                {info}
+              </p>
+            ) : null}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="mt-stack-sm w-full bg-primary-container text-surface-container-lowest font-button text-button py-[14px] rounded-xl hover:opacity-90 active:scale-[0.98] transition-all flex justify-center items-center disabled:opacity-60"
+            >
+              {loading ? "Enviando…" : "Enviar link"}
+            </button>
+          </form>
+
+          <button
+            type="button"
+            onClick={() => setView("form")}
+            className="mt-stack-lg font-button text-button text-primary-container hover:text-primary transition-colors"
+          >
+            Voltar para entrar
+          </button>
+        </main>
+      </div>
+    );
   }
 
   return (
@@ -126,6 +221,22 @@ export function AuthScreen({ mode, onSwitchMode, onSuccess }: AuthScreenProps) {
               className={inputClass}
             />
           </div>
+
+          {isLogin ? (
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setError("");
+                  setInfo("");
+                  setView("reset");
+                }}
+                className="font-button text-button text-primary-container hover:text-primary transition-colors"
+              >
+                Esqueci minha senha
+              </button>
+            </div>
+          ) : null}
 
           {!isLogin ? (
             <div className="flex flex-col gap-stack-sm">
