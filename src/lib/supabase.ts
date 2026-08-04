@@ -1,36 +1,47 @@
-import { createDirectus, rest, authentication } from "@directus/sdk";
-import type { Link } from "../types/link";
+import { createClient } from "@supabase/supabase-js";
+import type { Link, LinkType } from "../types/link";
 
 // ---------------------------------------------------------------------------
-// DB row shape (matches src/schema.sql)
+// Supabase client — single source of truth for the backend integration.
+// Configure via VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY (.env).
 // ---------------------------------------------------------------------------
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    "Missing Supabase config. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.",
+  );
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// ---------------------------------------------------------------------------
+// DB row shapes (match src/schema.sql)
+// ---------------------------------------------------------------------------
+
 export type DbLink = {
   id: string;
-  user_created: string | null;
+  user_id: string;
   title: string;
   url: string;
   type: string;
   clicks: number;
   active: boolean;
   sort: number;
-  date_created: string;
-  date_updated: string | null;
+  created_at: string;
+  updated_at: string | null;
 };
 
-// ---------------------------------------------------------------------------
-// Directus client — untyped to avoid SDK v21 generic headaches
-// ---------------------------------------------------------------------------
-function resolveUrl(): string {
-  const configured = import.meta.env.VITE_DIRECTUS_URL ?? "/directus";
-  if (configured.startsWith("http")) return configured;
-  return `${window.location.origin}${configured}`;
-}
-
-const directusUrl = typeof window !== "undefined" ? resolveUrl() : "http://localhost:8055";
-
-export const directus = createDirectus(directusUrl)
-  .with(authentication("cookie", { credentials: "include" }))
-  .with(rest());
+export type DbProfile = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  avatar: string | null;
+  created_at: string;
+  updated_at: string | null;
+};
 
 // ---------------------------------------------------------------------------
 // Field mapping helpers
@@ -41,11 +52,11 @@ export function toLink(row: DbLink): Link {
     id: row.id,
     title: row.title,
     url: row.url,
-    type: row.type as Link["type"],
+    type: row.type as LinkType,
     clicks: row.clicks,
     active: row.active,
     order: row.sort,
-    createdAt: row.date_created,
+    createdAt: row.created_at,
   };
 }
 

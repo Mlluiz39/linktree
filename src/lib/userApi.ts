@@ -1,42 +1,75 @@
-import { readMe, updateMe } from "@directus/sdk";
-import { directus } from "./directus";
+import { supabase } from './supabase'
+import type { DbProfile } from './supabase'
 
 export type CurrentUser = {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  avatar: string | null;
-};
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+  avatar: string | null
+}
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const client = directus as any;
-
+// Supabase stores credentials in auth.users; profile extras (name/avatar) live
+// in the "profiles" table, related by id (auth.uid()).
 export async function fetchCurrentUser(): Promise<CurrentUser> {
-  const me = await client.request(
-    (readMe as any)({
-      fields: ["id", "first_name", "last_name", "email", "avatar"],
-    }),
-  );
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('Não autenticado.')
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .maybeSingle()
+  if (error) throw error
+
+  const profile = data as DbProfile | null
   return {
-    id: me.id,
-    firstName: me.first_name ?? "",
-    lastName: me.last_name ?? "",
-    email: me.email ?? "",
-    avatar: me.avatar ?? null,
-  };
+    id: user.id,
+    firstName: profile?.first_name ?? '',
+    lastName: profile?.last_name ?? '',
+    email: user.email ?? '',
+    avatar: profile?.avatar ?? null,
+  }
 }
 
 export async function updateUser(patch: {
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  password?: string;
+  firstName?: string
+  lastName?: string
+  email?: string
+  password?: string
+  avatar?: string | null
 }): Promise<void> {
-  const payload: Record<string, unknown> = {};
-  if (patch.firstName !== undefined) payload.first_name = patch.firstName;
-  if (patch.lastName !== undefined) payload.last_name = patch.lastName;
-  if (patch.email !== undefined) payload.email = patch.email;
-  if (patch.password !== undefined) payload.password = patch.password;
-  await client.request((updateMe as any)(payload));
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('Não autenticado.')
+
+  // Profile fields (name/avatar) → "profiles" table (upsert row for this user).
+  const profilePatch: Partial<
+    Pick<DbProfile, 'first_name' | 'last_name' | 'avatar'>
+  > = {}
+  if (patch.firstName !== undefined) profilePatch.first_name = patch.firstName
+  if (patch.lastName !== undefined) profilePatch.last_name = patch.lastName
+  if (patch.avatar !== undefined) profilePatch.avatar = patch.avatar
+
+  if (Object.keys(profilePatch).length > 0) {
+    const { error } = await supabase
+      .from('profiles')
+      .upsert({ id: user.id, ...profilePatch })
+    if (error) throw error
+  }
+
+  // Auth fields (email/password) → Supabase Auth.
+  if (patch.email !== undefined && patch.email !== user.email) {
+    const { error } = await supabase.auth.updateUser({ email: patch.email })
+    if (error) throw error
+  }
+  if (patch.password !== undefined && patch.password !== '') {
+    const { error } = await supabase.auth.updateUser({
+      password: patch.password,
+    })
+    if (error) throw error
+  }
 }

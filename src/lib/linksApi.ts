@@ -1,62 +1,66 @@
-import {
-  createItem,
-  deleteItem,
-  readItems,
-  updateItem,
-} from "@directus/sdk";
-import { directus, toLink, toDbPayload } from "./directus";
+import { supabase, toLink, toDbPayload } from "./supabase";
+import type { DbLink } from "./supabase";
 import type { Link, LinkDraft } from "../types/link";
-import type { DbLink } from "./directus";
 
 // ---------------------------------------------------------------------------
-// Thin API layer — replaces linksStorage.ts
-// SDK v21 generics too strict for loosely-typed schemas → cast inputs.
+// Thin API layer — CRUD on the "links" table via Supabase.
+// Public interface is unchanged (fetch/create/update/delete/reorder),
+// so UI components do not need to know about the backend.
+// RLS ensures each user only reads/writes their own rows.
 // ---------------------------------------------------------------------------
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const client = directus as any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const C = "links" as any;
+const TABLE = "links";
 
 export async function fetchLinks(): Promise<Link[]> {
-  const rows = await client.request(
-    (readItems as any)(C, { sort: ["sort"], limit: -1 }),
-  );
-  return (rows as unknown as DbLink[]).map(toLink);
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select("*")
+    .order("sort", { ascending: true });
+  if (error) throw error;
+  return (data as unknown as DbLink[]).map(toLink);
 }
 
 export async function createLink(
   draft: LinkDraft,
   order: number,
 ): Promise<Link> {
-  const row = await client.request(
-    (createItem as any)(C, {
-      ...toDbPayload(draft),
-      sort: order,
-      clicks: 0,
-    }),
-  );
-  return toLink(row as unknown as DbLink);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Não autenticado.");
+
+  const { data, error } = await supabase
+    .from(TABLE)
+    .insert({ ...toDbPayload(draft), user_id: user.id, sort: order, clicks: 0 })
+    .select()
+    .single();
+  if (error) throw error;
+  return toLink(data as unknown as DbLink);
 }
 
 export async function updateLink(
   id: string,
   patch: Partial<Link>,
 ): Promise<Link> {
-  const row = await client.request(
-    (updateItem as any)(C, id, toDbPayload(patch)),
-  );
-  return toLink(row as unknown as DbLink);
+  const { data, error } = await supabase
+    .from(TABLE)
+    .update(toDbPayload(patch))
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) throw error;
+  return toLink(data as unknown as DbLink);
 }
 
 export async function deleteLink(id: string): Promise<void> {
-  await client.request((deleteItem as any)(C, id));
+  const { error } = await supabase.from(TABLE).delete().eq("id", id);
+  if (error) throw error;
 }
 
 export async function reorderLinks(ids: string[]): Promise<void> {
-  await Promise.all(
-    ids.map((id, index) =>
-      client.request((updateItem as any)(C, id, { sort: index })),
-    ),
-  );
+  const { error } = await supabase
+    .from(TABLE)
+    .upsert(ids.map((id, index) => ({ id, sort: index })));
+  if (error) throw error;
 }
+

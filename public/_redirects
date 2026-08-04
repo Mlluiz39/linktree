@@ -1,1 +1,2 @@
-/directus/*  https://directus.mlluizdevtech.com.br/:splat  200
+# Netlify redirects — the Supabase client talks directly to the Supabase API,
+# so no server-side proxy is required.

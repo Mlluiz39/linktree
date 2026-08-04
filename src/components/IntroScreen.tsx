@@ -1,8 +1,9 @@
 type IntroScreenProps = {
-  onStart: () => void;
+  onSignup: () => void;
+  onLogin: () => void;
 };
 
-export function IntroScreen({ onStart }: IntroScreenProps) {
+export function IntroScreen({ onSignup, onLogin }: IntroScreenProps) {
   return (
     <main className="w-full max-w-md mx-auto flex flex-col h-screen justify-between px-container-margin py-stack-lg">
       <div className="flex-grow" />
@@ -32,14 +33,14 @@ export function IntroScreen({ onStart }: IntroScreenProps) {
       <div className="flex flex-col items-center w-full mb-8">
         <button
           type="button"
-          onClick={onStart}
+          onClick={onSignup}
           className="w-full bg-primary-container text-surface-container-lowest h-[48px] rounded-xl flex items-center justify-center font-button text-button mb-stack-md transition-all hover:bg-[#E09D60] active:scale-[0.98] focus:outline-none"
         >
           Começar
         </button>
         <button
           type="button"
-          onClick={onStart}
+          onClick={onLogin}
           className="font-body-md text-body-md text-text-secondary hover:text-text-primary transition-colors py-2"
         >
           Já tenho conta
